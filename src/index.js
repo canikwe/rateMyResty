@@ -52,7 +52,7 @@ function renderForm(restaurants, inputDiv){
 
     const defaultOption = document.createElement('option')
     defaultOption.value = ''
-    defaultOption.innerText = 'Choose a Restaurant'
+    defaultOption.innerText = 'Choose a Resty'
     select.append(defaultOption)
 
     restaurants.forEach(rest => {
@@ -110,7 +110,7 @@ function addRating(e){
     }
 
     if (data.restaurant === ''){
-        alert('Please choose a real restaurant!')
+        alert('Please choose a real resty!')
     } else {
         const ratingUl = document.querySelector(`#ratings-${form.restaurant.value}`)
         const ratingTitle = document.createElement('li')
@@ -140,8 +140,8 @@ function renderNav(){
             <div class="right menu">
                 <div class="item">
                 <div class="ui icon input">
-                    <input type="text" placeholder="Search...">
-                    <i class="search link icon"></i>
+                    <input type="text" placeholder="Search by Resty Name...">
+                    <i id='search' class="search link icon"></i>
                 </div>
                 </div>
                 <a class="ui item">
@@ -150,4 +150,17 @@ function renderNav(){
             </div>
         </div>
     `
+    const searchBtn = document.querySelector('#search')
+    searchBtn.addEventListener('click', searchRestaurants)
+
+}
+
+function searchRestaurants(e){
+    const input = e.target.parentElement.firstElementChild.value
+    const restaurants = document.querySelectorAll('.card')
+
+    restaurants.forEach(rest => {
+        const name = rest.querySelector('h2')
+        name.innerText.includes(input) ? rest.style.display = '' : rest.style.display = 'none'
+    })
 }
