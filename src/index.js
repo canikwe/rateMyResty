@@ -50,6 +50,11 @@ function renderForm(restaurants, inputDiv){
     select.classList.add('ui', 'fluid', 'search', 'dropdown')
     select.name = 'restaurant'
 
+    const defaultOption = document.createElement('option')
+    defaultOption.value = ''
+    defaultOption.innerText = 'Choose a Restaurant'
+    select.append(defaultOption)
+
     restaurants.forEach(rest => {
         const option = document.createElement('option')
         option.value = rest.id
@@ -103,34 +108,35 @@ function addRating(e){
         title: form.title.value,
         content: form.content.value
     }
-    const ratingUl = document.querySelector(`#ratings-${form.restaurant.value}`)
-    const ratingTitle = document.createElement('li')
-    const ratingContentContainer = document.createElement('ul')
-    const ratingContent = document.createElement('li')
+
+    if (data.restaurant === ''){
+        alert('Please choose a real restaurant!')
+    } else {
+        const ratingUl = document.querySelector(`#ratings-${form.restaurant.value}`)
+        const ratingTitle = document.createElement('li')
+        const ratingContentContainer = document.createElement('ul')
+        const ratingContent = document.createElement('li')
+        
+        ratingTitle.innerText = data.title
+        ratingContent.innerHTML = data.content
     
-    ratingTitle.innerText = data.title
-    ratingContent.innerHTML = data.content
-
-    ratingContentContainer.append(ratingContent)
-    ratingTitle.append(ratingContentContainer)
-    ratingUl.append(ratingTitle)
-
-    form.reset()
+        ratingContentContainer.append(ratingContent)
+        ratingTitle.append(ratingContentContainer)
+        ratingUl.append(ratingTitle)
+    
+        form.reset()
+    }
 }
 
 function renderNav(){
     const nav = document.querySelector('#nav')
     nav.innerHTML = `
         <div class="ui secondary  menu">
+            <div class="header item">Rate My Resty</div>
             <a class="active item">
                 Home
             </a>
-            <a class="item">
-                Messages
-            </a>
-            <a class="item">
-                Friends
-            </a>
+            
             <div class="right menu">
                 <div class="item">
                 <div class="ui icon input">
