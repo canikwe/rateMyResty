@@ -1,21 +1,75 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('locked and loaded')
-    //declare nedded variables
+
     const main = document.querySelector('#card-container')
     const inputDiv = document.querySelector('#input-container')
-
-    //render the DOM
+    
     renderNav()
-    renderForm(db, inputDiv)
-    db.forEach(rest => renderRestaurant(rest, main))
+    renderHomepage()
 })
 
+function renderHomepage() {
+    const main = document.querySelector('#main')
+    main.innerText = ''
 
-function fetchRestaurants(){
-    //some fetch logic here
+    const title = document.createElement('h2')
+    title.innerText = 'Welcome to Rate My Resty 🍽'
+
+    const form = document.createElement('form')
+    form.classList.add('ui', 'form')
+
+    const inputDiv = document.createElement('div')
+    inputDiv.className = 'field'
+
+    const input = document.createElement('input')
+    input.placeholder = 'Search For Resties'
+    inputDiv.append(input)
+
+    const submitDiv = document.createElement('div')
+    submitDiv.className = 'field'
+
+    const submit = document.createElement('input')
+    submit.type = 'submit'
+    submit.value = 'Search Restaurants'
+    submit.classList.add('ui', 'button')
+    submitDiv.append(submit)
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault()
+        searchResties(input)
+    })
+
+    form.append(inputDiv, submitDiv)
+    main.append(title, form)
+}
+
+function searchResties(input){
+
+    const main = document.querySelector('#main')
+    main.innerHTML= '<h2>Loading...</h2>'
+
+    fetchRestaurants(main, input)
+}
+
+function fetchRestaurants(main, input){
+    fetch(`http://localhost:3000/yelp/restaurant/${input.value}`)
+    .then(res => res.json())
+    .then(businesses => {
+        main.innerText = ''
+        console.log(businesses)
+        
+        renderSearchResultsPage()
+        renderForm(businesses)
+        businesses.forEach(b => renderRestaurant(b, main))
+    })
+    .catch(err => {
+        console.log(err.message)
+        main.innerHTML = `<h2>Sinatra doesn't know this ditty...</h2>`
+    })
 }
 
 function renderRestaurant(rest, mainEl){
+    const cardContainer = document.querySelector('#card-container')
     const divContainer = document.createElement('div')
     divContainer.classList.add('ui', 'card')
 
@@ -23,23 +77,49 @@ function renderRestaurant(rest, mainEl){
     imgDiv.className = 'image'
 
     const img = document.createElement('img')
-    img.src = 'https://www.stlmag.com/downloads/291284/download/0219_Elmwood_0016.jpg?cb=05f56521ae049e15a8f3d244cafb3822&w=640'
+    img.src = rest.image_url || 'https://www.stlmag.com/downloads/291284/download/0219_Elmwood_0016.jpg?cb=05f56521ae049e15a8f3d244cafb3822&w=640'
 
     const name = document.createElement('h2')
     name.innerText = rest.name
 
     const desc = document.createElement('p')
-    desc.innerText = rest.description
+    desc.innerText = rest.location.display_address
 
     const ratings = document.createElement('ul')
     ratings.id = `ratings-${rest.id}`
 
     imgDiv.append(img)
     divContainer.append(imgDiv, name, desc, ratings)
-    mainEl.append(divContainer)
+    cardContainer.append(divContainer)
 }
 
-function renderForm(restaurants, inputDiv){
+function renderSearchResultsPage(){
+    const main = document.querySelector('#main')
+
+    const container = document.createElement('div')
+    container.id = 'container'
+    container.classList.add('ui', 'grid')
+
+    const columnDiv = document.createElement('div')
+    columnDiv.classList.add('ten', 'wide', 'column')
+
+    const cardContainer = document.createElement('div')
+    cardContainer.id = 'card-container'
+    cardContainer.classList.add('ui', 'cards')
+
+    const inputContainer = document.createElement('div')
+    inputContainer.id = 'input-container'
+    inputContainer.classList.add('six', 'wide', 'column')
+
+    columnDiv.append(cardContainer)
+    container.append(columnDiv, inputContainer)
+
+    main.append(container)
+}
+
+function renderForm(restaurants){
+    const inputDiv = document.querySelector('#input-container')
+
     const form = document.createElement('form')
     form.classList.add('ui', 'form')
 
@@ -130,26 +210,47 @@ function addRating(e){
 
 function renderNav(){
     const nav = document.querySelector('#nav')
-    nav.innerHTML = `
-        <div class="ui secondary  menu">
-            <div class="header item">Rate My Resty</div>
-            <a class="active item">
-                Home
-            </a>
-            
-            <div class="right menu">
-                <div class="item">
-                <div class="ui icon input">
-                    <input type="text" placeholder="Search by Resty Name...">
-                    <i id='search' class="search link icon"></i>
-                </div>
-                </div>
-                <a class="ui item">
-                Logout
-                </a>
-            </div>
-        </div>
-    `
+
+    const mainDiv = document.createElement('div')
+    mainDiv.classList.add('ui', 'secondary', 'menu')
+
+    const header = document.createElement('div')
+    header.classList.add('header', 'item')
+    header.innerText = 'Rate My Resty'
+
+    const home = document.createElement('a')
+    home.classList.add('active', 'item')
+    home.innerText = 'Home'
+    home.addEventListener('click', renderHomepage)
+
+    const rightMenu = document.createElement('div')
+    rightMenu.classList.add('right', 'menu')
+
+    const item1 = document.createElement('div')
+    item1.className = 'item'
+
+    const iconInput = document.createElement('div')
+    iconInput.classList.add('ui', 'icon', 'input')
+
+    const search = document.createElement('input')
+    search.placeholder = 'Search by Resty Name...'
+
+    const icon = document.createElement('i')
+    icon.id = 'search'
+    icon.classList.add('search', 'link', 'icon')
+
+    const logout = document.createElement('a')
+    logout.classList.add('ui', 'item')
+    logout.innerText = 'Logout'
+
+    iconInput.append(search, icon)
+
+    item1.append(iconInput)
+    rightMenu.append(item1, logout)
+
+    mainDiv.append(header, home, rightMenu)
+
+    nav.append(mainDiv)
     const searchBtn = document.querySelector('#search')
     searchBtn.addEventListener('click', searchRestaurants)
 
