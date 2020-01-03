@@ -22,7 +22,7 @@ function renderHomepage() {
     inputDiv.className = 'field'
 
     const input = document.createElement('input')
-    input.placeholder = 'Search For Resties'
+    input.placeholder = 'Search by location (e.g. city, region, country, zip code)'
     inputDiv.append(input)
 
     const submitDiv = document.createElement('div')
@@ -52,21 +52,57 @@ function searchResties(input){
 }
 
 function fetchRestaurants(main, input){
-    fetch(`http://localhost:3000/yelp/restaurant/${input.value}`)
+    fetch(`http://localhost:3000/restaurants/${input.value}`)
     .then(res => res.json())
     .then(businesses => {
-        main.innerText = ''
         console.log(businesses)
         
-        renderSearchResultsPage()
-        renderForm(businesses)
-        businesses.forEach(b => renderRestaurant(b, main))
+        addSearch(businesses)
+
+        renderResultsPage(businesses)
     })
     .catch(err => {
         console.log(err.message)
         main.innerHTML = `<h2>Sinatra doesn't know this ditty...</h2>`
     })
 }
+
+function restaurants(callback){
+    const resties = callback(restaurants)
+    return resties
+}
+
+function addSearch(businesses){
+    const search = document.querySelector('#search')
+    
+    search.addEventListener('change', (e) => handleSearch(e, businesses))
+}
+
+function handleSearch(e, businesses){
+    const searchTerm = e.target.value
+    const filteredBusinesses = businesses.filter(b => b.name.toLowerCase().includes(searchTerm))
+    
+    if (filteredBusinesses.length > 0) {
+        renderResultsPage(filteredBusinesses)
+    } else {
+        renderResultsPage(businesses)
+    }
+}
+
+function renderResultsPage(businesses){
+    const main = clearMain()
+
+    resultsSkeleton()
+    renderForm(businesses)
+    businesses.forEach(b => renderRestaurant(b, main))
+}
+
+function clearMain() {
+    const main = document.querySelector('#main')
+    main.innerText = ''
+    return main
+}
+
 
 function renderRestaurant(rest, mainEl){
     const cardContainer = document.querySelector('#card-container')
@@ -93,7 +129,7 @@ function renderRestaurant(rest, mainEl){
     cardContainer.append(divContainer)
 }
 
-function renderSearchResultsPage(){
+function resultsSkeleton(){
     const main = document.querySelector('#main')
 
     const container = document.createElement('div')
@@ -175,11 +211,15 @@ function renderForm(restaurants){
     inputDiv.append(form)
 
     //add event listeners
-    submit.addEventListener('click', addRating)
+    submit.addEventListener('click', e => {
+        // const resty = restaurants.find(r => r.id === e.target.parentElement.restaurant.value)
+        // addRating(e, resty)
+        addRating(e)
+    })
 
 }
 
-function addRating(e){
+function addRating(e,resty){
     console.log('adding a rating!')
 
     const form = e.target.parentElement
@@ -203,6 +243,12 @@ function addRating(e){
         ratingContentContainer.append(ratingContent)
         ratingTitle.append(ratingContentContainer)
         ratingUl.append(ratingTitle)
+
+        // if (resty.ratings){
+        //     resty.ratings.push(data)
+        // } else {
+        //     resty.ratings = [data]
+        // }
     
         form.reset()
     }
@@ -233,20 +279,22 @@ function renderNav(){
     iconInput.classList.add('ui', 'icon', 'input')
 
     const search = document.createElement('input')
+    search.id = 'search'
     search.placeholder = 'Search by Resty Name...'
 
     const icon = document.createElement('i')
     icon.id = 'search'
     icon.classList.add('search', 'link', 'icon')
 
-    const logout = document.createElement('a')
-    logout.classList.add('ui', 'item')
-    logout.innerText = 'Logout'
+    const login = document.createElement('a')
+    login.classList.add('ui', 'item')
+    login.innerText = 'Login'
+    login.addEventListener('click', renderLoginForm)
 
     iconInput.append(search, icon)
 
     item1.append(iconInput)
-    rightMenu.append(item1, logout)
+    rightMenu.append(item1, login)
 
     mainDiv.append(header, home, rightMenu)
 
@@ -254,6 +302,65 @@ function renderNav(){
     const searchBtn = document.querySelector('#search')
     searchBtn.addEventListener('click', searchRestaurants)
 
+}
+
+function renderLoginForm(e){
+    const navLoginBtn = e.target
+    const main = clearMain()
+
+    const h2 = document.createElement('h2')
+    h2.innerText = 'Login Here...'
+
+    const form = document.createElement('form')
+    form.classList.add('ui', 'form')
+
+    const inputDiv = document.createElement('div')
+    inputDiv.className = 'field'
+
+    const input = document.createElement('input')
+    input.name = 'name'
+    input.placeholder = 'Name'
+    inputDiv.append(input)
+
+    const submitDiv = document.createElement('div')
+    submitDiv.className = 'field'
+
+    const submit = document.createElement('input')
+    submit.type = 'submit'
+    submit.value = 'Login'
+    submit.classList.add('ui', 'button')
+    submitDiv.append(submit)
+
+    form.addEventListener('submit', (e) => loginUser(e, navLoginBtn))
+
+
+    form.append(inputDiv, submitDiv)
+    main.append(h2, form)
+}
+
+function loginUser(e, navLoginBtn) {
+    e.preventDefault()
+    
+    console.log("I'm loggin in ")
+
+    fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: e.target.name.value })
+    })
+    .then(res => res.json())
+    .then(resp => {
+        navLoginBtn.id = resp.data.id
+        navLoginBtn.innerText = 'Logout'
+        renderHomepage()
+    })
+    .catch(err => {
+        console.log(err)
+        main.innerHTML = `<h2>Sinatra doesn't know this ditty...</h2>`
+
+    })
 }
 
 function searchRestaurants(e){
@@ -264,4 +371,8 @@ function searchRestaurants(e){
         const name = rest.querySelector('h2')
         name.innerText.includes(input) ? rest.style.display = '' : rest.style.display = 'none'
     })
+}
+
+function getMain() {
+    return document.querySelector('#main')
 }
